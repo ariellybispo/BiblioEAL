@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Livros | Minha Biblioteca</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="navbar-brand">
+        <span class="brand-icon">📚</span>
+        <span class="brand-text">Minha Biblioteca</span>
+    </div>
+    <div class="navbar-menu">
+        <a th:href="@{/books}" class="nav-link active">Meus Livros</a>
+        <a th:href="@{/books/new}" class="nav-link nav-link-add">+ Adicionar</a>
+    </div>
+    <div class="navbar-user">
+        <span class="user-greeting">Olá, <strong th:text="${username}">Usuário</strong></span>
+        <form th:action="@{/logout}" method="post" style="display:inline;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="btn-logout">Sair</button>
+        </form>
+    </div>
+</nav>
+
+<main class="main-content">
+    <!-- Flash messages -->
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <!-- Cabeçalho da página -->
+    <div class="page-header">
+        <h2>Minha Coleção</h2>
+        <a th:href="@{/books/new}" class="btn btn-primary">+ Novo Livro</a>
+    </div>
+
+    <!-- Barra de Busca e Filtros -->
+    <div class="filter-bar">
+        <form th:action="@{/books}" method="get" class="search-form">
+            <input type="text" name="search" th:value="${search}"
+                   placeholder="Buscar por título..." class="search-input">
+            <button type="submit" class="btn btn-secondary">Buscar</button>
+        </form>
+
+        <div class="status-filters">
+            <a th:href="@{/books}" class="filter-chip"
+               th:classappend="${selectedStatus == null ? ' active' : ''}">Todos</a>
+            <a th:each="s : ${statuses}"
+               th:href="@{/books(status=${s})}"
+               th:text="${s.label}"
+               class="filter-chip"
+               th:classappend="${selectedStatus == s ? ' active' : ''}"></a>
+        </div>
+    </div>
+
+    <!-- Lista de Livros -->
+    <div th:if="${books.empty}" class="empty-state">
+        <span class="empty-icon">📖</span>
+        <h3>Nenhum livro encontrado</h3>
+        <p>Comece adicionando o primeiro livro à sua biblioteca!</p>
+        <a th:href="@{/books/new}" class="btn btn-primary">Adicionar Livro</a>
+    </div>
+
+    <div th:unless="${books.empty}" class="books-grid">
+        <div th:each="book : ${books}" class="book-card">
+            <div class="book-status-badge"
+                 th:text="${book.status != null ? book.status.label : 'Quero Ler'}"
+                 th:classappend="${book.status != null ? ' status-' + book.status.name().toLowerCase().replace('_', '-') : ' status-quero-ler'}">
+            </div>
+
+            <div class="book-info">
+                <h3 class="book-title" th:text="${book.title}">Título do Livro</h3>
+                <p class="book-author" th:text="${book.author}">Autor</p>
+                <p class="book-isbn"><small>ISBN: <span th:text="${book.isbn}"></span></small></p>
+                <p class="book-genre" th:if="${book.genre}" th:text="${book.genre}"></p>
+                <p class="book-year" th:if="${book.year}">
+                    <small th:text="${book.year}"></small>
+                </p>
+            </div>
+
+            <div class="book-actions">
+                <a th:href="@{/books/{id}/edit(id=${book.id})}" class="btn btn-sm btn-secondary">
+                    ✏️ Editar
+                </a>
+                <form th:action="@{/books/{id}/delete(id=${book.id})}" method="post"
+                      onsubmit="return confirm('Tem certeza que deseja remover este livro?')">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                    <button type="submit" class="btn btn-sm btn-danger">🗑️ Remover</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contador -->
+    <div th:unless="${books.empty}" class="books-count">
+        <p th:text="${books.size()} + ' livro(s) encontrado(s)'"></p>
+    </div>
+</main>
+
+<footer class="footer">
+    <p>Personal Library Manager &copy; 2025 — Projeto QA</p>
+</footer>
+
+<script th:src="@{/js/app.js}"></script>
+</body>
+</html>
