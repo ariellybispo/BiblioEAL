@@ -241,10 +241,6 @@ Request HTTP
 
 Ver o arquivo [RTM.md](RTM.md) para a Matriz de Rastreabilidade de Requisitos completa com diagramas UML de sequência.
 
----
-
-## 👥 Entrega
-
-- **Prazo:** Semana de 18 de maio
-- **Turmas:** NA e NB
-- **Repositório:** GitHub com histórico de commits organizado
+Alan Fonseca
+Arielly bispo
+Eduardo Sampaio
