@@ -3,7 +3,6 @@ package com.library;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
@@ -22,28 +21,32 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * COMO FUNCIONA?
  * ========================
  * 1. @Testcontainers: habilita o suporte JUnit 5 ao Testcontainers
- * 2. @Container: gerencia o ciclo de vida do container (start/stop)
+ * 2. Container é iniciado ESTATICAMENTE (uma vez para toda a JVM)
  * 3. @DynamicPropertySource: sobrescreve as propriedades do Spring
  *    com o URI dinâmico do container (porta aleatória a cada execução)
  *
- * O container MongoDB é compartilhado entre todos os testes desta hierarquia
- * (static), o que melhora performance evitando subir/descer containers repetidamente.
+ * O container MongoDB vive durante toda a suite de testes (via static block +
+ * shutdown hook), evitando que o Spring context tente reconectar a uma porta
+ * que já fechou quando as classes de teste rodam sequencialmente.
  */
 @Testcontainers
 public abstract class BaseIntegrationTest {
 
     /**
-     * Container MongoDB compartilhado entre todos os testes.
-     * Usa a imagem oficial do MongoDB 6.
+     * Container MongoDB singleton compartilhado por TODA a suite de testes.
+     *
+     * Iniciado no static block (uma vez por JVM) e parado via shutdown hook.
+     * Usar @Container aqui causaria reinício entre classes de teste, fazendo
+     * o Spring context perder a conexão com a porta antiga.
      */
-    @Container
-    static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:6.0")
-            .withReuse(true);  // Reutiliza o container entre execuções para performance
+    static final MongoDBContainer mongoDBContainer;
 
-    /**
-     * Injeta dinamicamente o URI do MongoDB gerado pelo Testcontainers.
-     * Sem isso, a aplicação tentaria conectar ao MongoDB em localhost:27017 (inexistente nos testes).
-     */
+    static {
+        mongoDBContainer = new MongoDBContainer("mongo:6.0");
+        mongoDBContainer.start();
+        Runtime.getRuntime().addShutdownHook(new Thread(mongoDBContainer::stop));
+    }
+
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
