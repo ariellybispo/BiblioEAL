@@ -1,6 +1,15 @@
 # 📚 BiblioEAL — Personal Library Manager
 
-Sistema completo para gerenciamento de biblioteca pessoal com autenticação de usuários.
+Sistema completo para gerenciamento de biblioteca pessoal com autenticação de usuários, construído com Spring Boot, MongoDB e cobertura de testes em múltiplas camadas.
+
+---
+
+## 📋 Documentação
+
+| Documento | Descrição |
+|-----------|-----------|
+| [RTM.md](RTM.md) | Matriz de Rastreabilidade de Requisitos com 16 RFs e diagramas UML de sequência |
+| [README.md](README.md) | Este arquivo — visão geral, setup e instruções |
 
 ---
 
@@ -76,6 +85,18 @@ BiblioEAL/
 
 ---
 
+## 📋 Funcionalidades
+
+- **Cadastro de Usuários** — nome, username único, email único, senha com hash BCrypt
+- **Login / Logout** — sessão HTTP gerenciada pelo Spring Security
+- **CRUD de Livros** — criar, listar, editar, excluir
+- **Filtros** — busca por título (case-insensitive), filtro por status de leitura
+- **Isolamento de dados** — cada usuário vê apenas seus próprios livros
+- **Validação** — Bean Validation nos formulários
+- **Proteção CSRF** — tokens em todos os formulários POST
+
+---
+
 ## 🚀 Como Executar
 
 ### Pré-requisitos
@@ -134,32 +155,31 @@ mvn verify -pl backend
 
 ---
 
-## 🔍 SonarQube
+## 🛡️ Estratégia de Testes
 
-### Subir o SonarQube local
-
-```bash
-docker-compose up -d sonarqube sonar-postgres
-# Aguarde ~2 minutos, acesse http://localhost:9000
-# Login: admin / admin
+```
+           /\
+          /  \          E2E / Controller
+         /────\         AuthControllerE2ETest, BookControllerE2ETest
+        /      \        MockMvc + Testcontainers
+       /────────\
+      /          \      Integração
+     /────────────\     UserServiceIntegrationTest, BookServiceIntegrationTest
+    /              \    Testcontainers (MongoDB real)
+   /────────────────\
+  /                  \  Unitários
+ /────────────────────\ BookDTOTest, UserRegistrationDTOTest
+                        JUnit 5 puro (sem Spring, sem banco)
 ```
 
-### Criar projeto e token
+### Por que Testcontainers e não Mocks?
 
-1. Acesse http://localhost:9000
-2. Crie um projeto manual com key: `personal-library`
-3. Gere um token de análise
-4. Configure no GitHub Secrets: `SONAR_TOKEN` e `SONAR_HOST_URL`
-
-### Rodar análise manualmente
-
-```bash
-cd backend
-mvn verify sonar:sonar \
-  -Dsonar.projectKey=personal-library \
-  -Dsonar.host.url=http://localhost:9000 \
-  -Dsonar.login=SEU_TOKEN
-```
+| Critério | Mock | Testcontainers |
+|---|---|---|
+| Fidelidade ao MongoDB | ⚠️ Simula | ✅ Real |
+| Índices únicos respeitados | ⚠️ Não | ✅ Sim |
+| Velocidade | ✅ Rápido | ⚠️ Mais lento |
+| Confiabilidade | ⚠️ Pode mascarar bugs | ✅ Revela bugs reais |
 
 ---
 
@@ -197,50 +217,50 @@ Request HTTP
 
 ---
 
-## 🛡️ Estratégia de Testes
+## 🔍 SonarQube
 
-```
-           /\
-          /  \          E2E / Controller
-         /────\         AuthControllerE2ETest, BookControllerE2ETest
-        /      \        MockMvc + Testcontainers
-       /────────\       
-      /          \      Integração
-     /────────────\     UserServiceIntegrationTest, BookServiceIntegrationTest
-    /              \    Testcontainers (MongoDB real)
-   /────────────────\   
-  /                  \  Unitários
- /────────────────────\ BookDTOTest, UserRegistrationDTOTest
-                        JUnit 5 puro (sem Spring, sem banco)
+### Subir o SonarQube local
+
+```bash
+docker-compose up -d sonarqube sonar-postgres
+# Aguarde ~2 minutos, acesse http://localhost:9000
+# Login: admin / admin
 ```
 
-### Por que Testcontainers e não Mocks?
+### Criar projeto e token
 
-| Critério | Mock | Testcontainers |
-|---|---|---|
-| Fidelidade ao MongoDB | ⚠️ Simula | ✅ Real |
-| Índices únicos respeitados | ⚠️ Não | ✅ Sim |
-| Velocidade | ✅ Rápido | ⚠️ Mais lento |
-| Confiabilidade | ⚠️ Pode mascarar bugs | ✅ Revela bugs reais |
+1. Acesse http://localhost:9000
+2. Crie um projeto manual com key: `personal-library`
+3. Gere um token de análise
+4. Configure no GitHub Secrets: `SONAR_TOKEN` e `SONAR_HOST_URL`
+
+### Rodar análise manualmente
+
+```bash
+cd backend
+mvn verify sonar:sonar \
+  -Dsonar.projectKey=personal-library \
+  -Dsonar.host.url=http://localhost:9000 \
+  -Dsonar.login=SEU_TOKEN
+```
 
 ---
 
-## 📋 Funcionalidades
+## 📊 RTM — Rastreabilidade de Requisitos
 
-- **Cadastro de Usuários** — nome, username único, email único, senha com hash BCrypt
-- **Login / Logout** — sessão HTTP gerenciada pelo Spring Security
-- **CRUD de Livros** — criar, listar, editar, excluir
-- **Filtros** — busca por título (case-insensitive), filtro por status de leitura
-- **Isolamento de dados** — cada usuário vê apenas seus próprios livros
-- **Validação** — Bean Validation nos formulários
-- **Proteção CSRF** — tokens em todos os formulários POST
+Ver o arquivo [RTM.md](RTM.md) para a Matriz de Rastreabilidade de Requisitos completa, com:
+
+- 16 requisitos funcionais mapeados
+- Testes vinculados a cada requisito
+- Diagramas UML de Sequência (links interativos via Mermaid Live)
+- Cobertura 100% dos requisitos
 
 ---
 
-## 📁 RTM
+## 👥 Autores
 
-Ver o arquivo [RTM.md](RTM.md) para a Matriz de Rastreabilidade de Requisitos completa com diagramas UML de sequência.
-
-Alan Fonseca
-Arielly bispo
-Eduardo Sampaio
+| Nome | GitHub |
+|------|--------|
+| Alan Fonseca | alnfonseca |
+| Arielly Bispo | ariellybispo |
+| Eduardo Sampaio | oedusampaio |
