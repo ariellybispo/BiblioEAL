@@ -32,6 +32,9 @@ public class WindowsDockerStrategy extends DockerClientProviderStrategy {
 
     @Override
     public TransportConfig getTransportConfig() throws InvalidConfigurationException {
+        if (!System.getProperty("os.name", "").toLowerCase().contains("windows")) {
+            throw new InvalidConfigurationException("WindowsDockerStrategy só ativa no Windows");
+        }
         return TransportConfig.builder()
                 .dockerHost(DOCKER_HOST)
                 .build();

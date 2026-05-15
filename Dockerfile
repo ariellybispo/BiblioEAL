@@ -9,18 +9,17 @@
 # ============================================================
 
 # ─── Estágio 1: Build ───────────────────────────────────────
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM maven:3.9-eclipse-temurin-17-alpine AS builder
 
 WORKDIR /app
 
 # Copia apenas o pom.xml primeiro — aproveita cache de layers do Docker
 # Se o pom.xml não mudou, o Maven não re-baixa as dependências
-COPY pom.xml .
+COPY backend/pom.xml .
 RUN mvn dependency:go-offline -B 2>/dev/null || true
 
 # Copia e compila o código-fonte
-COPY src ./src
-COPY pom.xml .
+COPY backend/src ./src
 
 # -DskipTests: pula testes no build da imagem
 # Os testes rodam no CI (GitHub Actions), não no Dockerfile
